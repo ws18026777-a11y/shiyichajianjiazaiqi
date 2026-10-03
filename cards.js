@@ -9,7 +9,7 @@ window.CARDS_DATA = {
     "ABC111": {
       "type": "永久",
       "expire": "永久",
-      "device": ""
+      "device": "FP-5125769644F86D16"
     },
     "ABC123": {
       "type": "永久",
