@@ -1,7 +1,7 @@
 // 卡密数据（您C每次改这里就行）
 window.CARDS_DATA = {
   "keys": {
-    "ABC888": {
+    "ABC8188": {
       "type": "永久",
       "expire": "永久",
       "device": "FP-5125769644F86D16"
