@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Bridge</title></head>
+<body>
+<script>
+fetch('https://ws18026777-a11y.github.io/shiyichajianjiazaiqi/cards.js?t=' + Date.now())
+    .then(function(res) { return res.text(); })
+    .then(function(text) {
+        var match = text.match(/window\.CARDS_DATA\s*=\s*({[\s\S]*})\s*;?\s*$/);
+        var data = match ? match[1] : text;
+        try { data = JSON.parse(data); } catch(e) {}
+        parent.postMessage({
+            type: 'CARDS_DATA',
+            ok: true,
+            keys: data.keys
+        }, '*');
+    })
+    .catch(function(err) {
+        parent.postMessage({
+            type: 'CARDS_DATA',
+            ok: false,
+            error: err.message
+        }, '*');
+    });
+</script>
+</body>
+</html>
