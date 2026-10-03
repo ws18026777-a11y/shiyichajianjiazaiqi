@@ -1,27 +1,651 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>Bridge</title></head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"/>
+    <title>H5GG 加载器</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+        body{background:transparent;height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center}
+        #app{width:650px;height:100vh;max-height:100vh;background:#1a1a2e;border-radius:12px;border:1px solid #4a4a6a;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.6);display:flex;flex-direction:column;position:relative}
+        .header{background:#4361ee;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;height:40px;flex-shrink:0}
+        .header-title{color:#fff;font-size:15px;font-weight:bold}
+        .header-close{background:rgba(255,255,255,0.15);border:none;border-radius:50%;color:#fff;width:24px;height:24px;font-size:14px;cursor:pointer}
+        .menu-bar{display:flex;background:#252540;border-bottom:1px solid #4a4a6a;flex-shrink:0}
+        .menu-item{padding:10px 20px;color:#888;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+        .menu-item.active{color:#fff;border-bottom-color:#4361ee}
+        .content{flex:1;overflow:hidden;position:relative;background:#1a1a2e}
+        .tab-page{display:none;width:100%;height:100%}
+        .tab-page.active{display:block}
+        .home-content{padding:16px;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch}
+        .device-card{background:rgba(255,255,255,0.03);border-radius:8px;padding:12px;margin-bottom:16px;border:1px solid #333}
+        .device-card .label{color:#888;font-size:11px;margin-top:6px}
+        .device-card .label:first-child{margin-top:0}
+        .device-card .status{font-size:12px;margin-top:4px;padding:6px 10px;border-radius:4px}
+        .device-card .status.active{color:#90EE90;background:rgba(46,204,113,0.1)}
+        .device-card .status.inactive{color:#ff6b6b;background:rgba(255,107,107,0.1)}
+        .device-card .status.waiting{color:#f1c40f;background:rgba(241,196,15,0.1)}
+        .device-card .status.info{color:#64b5f6;background:rgba(100,181,246,0.1)}
+        .device-card .status.revoked{color:#ff6b6b;background:rgba(255,107,107,0.2);border:1px solid #ff6b6b}
+        .device-card .device-info-box{background:rgba(255,255,255,0.03);border-radius:6px;padding:10px;margin:8px 0;border:1px solid #2a2a4a;word-break:break-all}
+        .device-card .device-info-box .di-label{color:#666;font-size:10px}
+        .device-card .device-info-box .di-value{color:#90EE90;font-family:monospace;font-size:12px;margin-top:2px}
+        .device-card .device-info-box .di-value.fingerprint{color:#bb86fc;font-size:13px;font-weight:bold}
+        .device-card .info-tip{color:#444;font-size:9px;margin-top:4px}
+        .plugin-card{background:rgba(255,255,255,0.05);border:1px solid #4a4a6a;border-radius:8px;padding:16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .3s}
+        .plugin-card:hover{background:rgba(67,97,238,0.15);border-color:#4361ee}
+        .plugin-card .info h3{color:#fff;font-size:15px;margin-bottom:4px}
+        .plugin-card .info p{color:#888;font-size:12px}
+        .plugin-card .btn-load{border:none;padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;color:#fff;background:#4361ee;transition:all .3s}
+        .plugin-card .btn-load.loaded{background:#2ecc71}
+        .plugin-card .btn-load:disabled{opacity:0.5;cursor:not-allowed}
+        .auth-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:center;z-index:100;border-radius:12px}
+        .auth-overlay.show{display:flex}
+        .auth-box{background:#2a2a40;padding:30px;border-radius:12px;border:1px solid #4a4a6a;max-width:400px;width:90%;text-align:center}
+        .auth-box h2{color:#90EE90;font-size:18px;margin-bottom:6px}
+        .auth-box .sub{color:#888;font-size:12px;margin-bottom:10px}
+        .auth-box .device-info{background:rgba(255,255,255,0.05);border-radius:6px;padding:8px;margin:8px 0;font-size:11px;color:#666;word-break:break-all}
+        .auth-box .device-info span{color:#bb86fc;font-family:monospace;font-size:11px;font-weight:bold}
+        .auth-box .input-group{margin:8px 0}
+        .auth-box input{width:100%;padding:10px;border-radius:8px;border:1px solid #4a4a6a;background:#111;color:#fff;font-size:13px;margin-bottom:8px;text-align:center;letter-spacing:0.5px;font-family:monospace}
+        .auth-box input:focus{border-color:#4361ee;outline:none}
+        .auth-box .auth-error{color:#ff6b6b;font-size:13px;margin-top:8px;display:none}
+        .auth-box .auth-btn{width:100%;padding:10px;border:none;border-radius:8px;background:#90EE90;color:#000;font-weight:bold;font-size:15px;cursor:pointer;transition:opacity .2s}
+        .auth-box .auth-btn:disabled{opacity:0.5;cursor:not-allowed}
+        .auth-box .hint{font-size:10px;color:#444;margin-top:10px}
+        .back-btn{display:none;background:none;border:none;color:#fff;font-size:24px;cursor:pointer;padding:8px 16px;position:absolute;top:0;left:0;z-index:20}
+        .back-btn.show{display:block}
+        #page-plugin{position:relative}
+        #webview-container{width:100%;height:100%}
+        #loading-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:999;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;flex-direction:column;color:#fff;border-radius:12px}
+        #loading-overlay.show{display:flex}
+        #loading-overlay .spinner{width:44px;height:44px;border:4px solid #333;border-top-color:#4361ee;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:18px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        #loading-overlay .load-title{color:#fff;font-size:15px;margin-bottom:8px;font-weight:bold}
+        #loading-overlay .load-status{color:#90EE90;font-size:13px;margin-bottom:16px}
+        #loading-overlay .load-bar-wrap{width:220px;height:6px;background:#2a2a4a;border-radius:3px;overflow:hidden;margin-bottom:10px}
+        #loading-overlay .load-bar{height:100%;width:0%;background:linear-gradient(90deg,#4361ee,#90EE90);border-radius:3px;transition:width .3s ease}
+        #loading-overlay .load-percent{color:#888;font-size:12px;font-family:monospace}
+        #loading-overlay .load-tip{color:#555;font-size:10px;margin-top:14px}
+        .copyright-notice{margin-top:16px;padding:14px 16px;background:rgba(255,200,0,0.06);border-radius:8px;border-left:3px solid #ffcc00}
+        .copyright-notice p{color:#ffcc00;font-size:12px;line-height:1.8;margin:0}
+        .copyright-notice .small-text{color:#888;font-size:11px}
+        ::-webkit-scrollbar{width:4px}
+        ::-webkit-scrollbar-thumb{background:#4361ee;border-radius:2px}
+        @media(max-width:650px){#app{width:100%;border-radius:0;border:none}.auth-overlay{border-radius:0}#loading-overlay{border-radius:0}}
+        .copy-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:#90EE90;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;border:1px solid #4a4a6a;display:none;text-align:center;max-width:80%;word-break:break-all}
+        .copy-toast.show{display:block;animation:fadeInUp .3s ease}
+        @keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+        .progress-bar{width:100%;height:3px;background:#2a2a4a;position:relative;overflow:hidden;flex-shrink:0}
+        .progress-bar .fill{height:100%;background:linear-gradient(90deg,#4361ee,#90EE90);width:0%;transition:width .3s}
+    </style>
+</head>
 <body>
+<div id="app">
+
+    <div class="copy-toast" id="copyToast">📋 已复制</div>
+    <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+    
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="load-title">正在启动插件</div>
+        <div class="load-status" id="loadStatus">连接服务器中...</div>
+        <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+        <div class="load-percent" id="loadPercent">0%</div>
+        <div class="load-tip">首次加载稍慢，请耐心等待</div>
+    </div>
+
+    <div class="header">
+        <span class="header-title">H5GG 加载器</span>
+        <button class="header-close" id="closeBtn">✕</button>
+    </div>
+
+    <div class="menu-bar">
+        <div class="menu-item active" data-tab="home">首页</div>
+        <div class="menu-item" data-tab="plugin">插件</div>
+    </div>
+
+    <div class="content">
+        <div class="tab-page active" id="page-home">
+            <div class="home-content">
+                <div class="device-card">
+                    <div id="udidBindArea">
+                        <div class="label">📱 设备信息</div>
+                        <div class="device-info-box">
+                            <div class="di-label">🔑 设备标识</div>
+                            <div class="di-value fingerprint" id="udidValue">生成中...</div>
+                            <div class="info-tip" id="statusTip">● 正在识别设备</div>
+                        </div>
+                        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="bind-btn" id="refreshBtn" style="background:#2ecc71;color:#000;">🔄 刷新</button>
+                            <button class="bind-btn" id="copyBtn" style="background:#f39c12;color:#000;">📋 复制</button>
+                        </div>
+                        <div class="udid-display" id="udidDisplay"></div>
+                        <div class="bound-status" id="boundStatus">✅ 已绑定</div>
+                        <div class="unbind-area" id="unbindArea" style="display:none;">
+                            <button class="unbind-btn" id="unbindBtn">⚠️ 重置</button>
+                        </div>
+                    </div>
+                    <div class="label" style="margin-top:12px;">📊 状态</div>
+                    <div class="status waiting" id="statusDisplay">⏳ 初始化中...</div>
+                </div>
+
+                <div class="plugin-card" id="pluginCard">
+                    <div class="info">
+                        <h3>2K 释意插件</h3>
+                        <p id="pluginDesc">NBA 2K 游戏辅助工具</p>
+                    </div>
+                    <button class="btn-load" id="actionBtn" disabled>初始化中</button>
+                </div>
+
+                <div class="copyright-notice">
+                    <p>⚠️ 此插件由 <strong style="color:#fff;">2K美式释意</strong> 本人制作<br>
+                    购买请关注公众号 <strong style="color:#fff;">「2k释意」</strong> 私信<br>
+                    <span class="small-text">唯一正版渠道 · 谨防受骗</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-page" id="page-plugin">
+            <button class="back-btn" id="backBtn">‹</button>
+            <div id="webview-container"></div>
+        </div>
+
+        <div class="auth-overlay" id="authOverlay">
+            <div class="auth-box">
+                <h2>🔐 卡密验证</h2>
+                <p class="sub">输入卡密激活</p>
+                <div class="device-info">设备: <span id="authDeviceId">---</span></div>
+                <div class="input-group">
+                    <input type="text" id="authCardInput" placeholder="请输入卡密" maxlength="20">
+                </div>
+                <div class="auth-error" id="authError">卡密无效</div>
+                <button class="auth-btn" id="authBtn">验证并激活</button>
+                <div class="hint">一机一码 · 请勿共用</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-fetch('https://ws18026777-a11y.github.io/shiyichajianjiazaiqi/cards.js?t=' + Date.now())
-    .then(function(res) { return res.text(); })
-    .then(function(text) {
-        var match = text.match(/window\.CARDS_DATA\s*=\s*({[\s\S]*})\s*;?\s*$/);
-        var data = match ? match[1] : text;
-        try { data = JSON.parse(data); } catch(e) {}
-        parent.postMessage({
-            type: 'CARDS_DATA',
-            ok: true,
-            keys: data.keys
-        }, '*');
-    })
-    .catch(function(err) {
-        parent.postMessage({
-            type: 'CARDS_DATA',
-            ok: false,
-            error: err.message
-        }, '*');
+// ============================================================
+// 🚀 iframe中转版 - 绕过H5GG跨域限制
+// ============================================================
+
+var PLUGIN_URL = 'https://ws18026777-a11y.github.io/wszxh/';
+var BRIDGE_URL = 'https://ws18026777-a11y.github.io/shiyichajianjiazaiqi/bridge.html';
+var CARDS_JS_URL = 'https://ws18026777-a11y.github.io/shiyichajianjiazaiqi/cards.js';
+
+var CARDS_DB = {};
+var IS_LOADING = true;
+var DEVICE_ID = null;
+
+// ============================================================
+// 进度条
+// ============================================================
+
+function setProgress(percent) {
+    var fill = document.getElementById('progressFill');
+    if (fill) fill.style.width = Math.min(percent, 100) + '%';
+}
+
+// ============================================================
+// 存储 API
+// ============================================================
+
+function saveToKeychain(key, value) {
+    try {
+        if (typeof window.H5GGSetKeychain === 'function') { window.H5GGSetKeychain(key, value); return true; }
+        if (typeof window.setKeychain === 'function') { window.setKeychain(key, value); return true; }
+    } catch(e) {}
+    return false;
+}
+
+function getFromKeychain(key) {
+    try {
+        if (typeof window.H5GGGetKeychain === 'function') return window.H5GGGetKeychain(key);
+        if (typeof window.getKeychain === 'function') return window.getKeychain(key);
+    } catch(e) {}
+    return null;
+}
+
+function saveToFile(filename, data) {
+    try {
+        if (typeof window.H5GGWriteFile === 'function') { window.H5GGWriteFile(filename, data); return true; }
+    } catch(e) {}
+    return false;
+}
+
+function readFromFile(filename) {
+    try {
+        if (typeof window.H5GGReadFile === 'function') return window.H5GGReadFile(filename);
+    } catch(e) {}
+    return null;
+}
+
+function saveData(key, value) {
+    var saved = false;
+    if (saveToKeychain('gg_' + key, value)) saved = true;
+    if (saveToFile('gg_' + key + '.txt', value)) saved = true;
+    try { localStorage.setItem('gg_' + key, value); saved = true; } catch(e) {}
+    return saved;
+}
+
+function getData(key) {
+    var val = null;
+    val = getFromKeychain('gg_' + key);
+    if (val !== null && val !== undefined && val.length > 0) return val;
+    val = readFromFile('gg_' + key + '.txt');
+    if (val !== null && val !== undefined && val.length > 0) {
+        saveToKeychain('gg_' + key, val);
+        return val;
+    }
+    try {
+        val = localStorage.getItem('gg_' + key);
+        if (val !== null && val.length > 0) {
+            saveToKeychain('gg_' + key, val);
+            saveToFile('gg_' + key + '.txt', val);
+            return val;
+        }
+    } catch(e) {}
+    return null;
+}
+
+function removeData(key) {
+    try {
+        if (typeof window.H5GGRemoveKeychain === 'function') window.H5GGRemoveKeychain('gg_' + key);
+        if (typeof window.removeKeychain === 'function') window.removeKeychain('gg_' + key);
+    } catch(e) {}
+    try {
+        if (typeof window.H5GGDeleteFile === 'function') window.H5GGDeleteFile('gg_' + key + '.txt');
+    } catch(e) {}
+    try { localStorage.removeItem('gg_' + key); } catch(e) {}
+}
+
+// ============================================================
+// 设备指纹
+// ============================================================
+
+function generateStableFingerprint() {
+    var components = [];
+    components.push('s:' + screen.width + 'x' + screen.height + ':' + screen.colorDepth + ':' + window.devicePixelRatio);
+    components.push('tz:' + Intl.DateTimeFormat().resolvedOptions().timeZone);
+    components.push('tzo:' + new Date().getTimezoneOffset());
+    components.push('lang:' + navigator.language);
+    components.push('platform:' + navigator.platform);
+    if (navigator.hardwareConcurrency) components.push('cores:' + navigator.hardwareConcurrency);
+    if (navigator.deviceMemory) components.push('memory:' + navigator.deviceMemory);
+
+    try {
+        var canvas = document.createElement('canvas');
+        canvas.width = 256; canvas.height = 128;
+        var ctx = canvas.getContext('2d');
+        ctx.textBaseline = 'top'; ctx.font = '14px Arial';
+        ctx.fillStyle = '#f60'; ctx.fillRect(10, 10, 50, 50);
+        ctx.fillStyle = '#069'; ctx.fillText('Device Fingerprint', 10, 60);
+        ctx.fillStyle = 'rgba(102,204,0,0.7)'; ctx.fillText('2K Plugin', 10, 90);
+        ctx.strokeStyle = '#f00'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(100, 50, 30, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = 'rgba(0,0,255,0.3)'; ctx.fillRect(150, 20, 40, 60);
+        components.push('c:' + canvas.toDataURL().substring(0, 200));
+    } catch(e) { components.push('c:error'); }
+
+    try {
+       ++) var c2 = document.createElement('canvas');
+        var gl = c2.getContext('webgl') || c2.getContext('exper {
+imental-webgl');
+        if (gl) {
+            var di = gl.getExtension('WEBGL_debug_re           nderer_info');
+            if (di) {
+                var vendor = gl.getParameter(di.UNMASKED ctx_VENDOR_WEBGL) || '';
+                var renderer = gl.getParameter(di.UNM3ASKED_RENDERER_WEBGL) || '';
+                components.push('w:' + vendor + '|.font' + renderer);
+            }
+            var extensions = gl.getSupportedExtensions() || [];
+            components.push('we:' + extensions.join(',').substring(0, 100));
+        }
+    } catch(e) { components.push('w:error'); }
+
+    try {
+        var fonts = ['Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia', 'Palatino', 'Garamond', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact'];
+        var fontStr = '';
+        var c3 = document.createElement('canvas');
+        var ctx3 = c3.getContext('2d');
+        for (var i = 0; i < fonts.length; i = '72px ' + fonts[i];
+            fontStr += ctx3.measureText('Hello World').width + '|';
+        }
+        components.push('f:' + fontStr);
+    } catch(e) { components.push('f:error'); }
+
+    try {
+        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var oscillator = audioCtx.createOscillator();
+        var analyser = audioCtx.createAnalyser();
+        oscillator.connect(analyser); analyser.connect(audioCtx.destination);
+        oscillator.start(0); oscillator.stop(0.001);
+        var data = new Float32Array(analyser.frequencyBinCount);
+        analyser.getFloatFrequencyData(data);
+        var hash = 0;
+        for (var j = 0; j < 100 && j < data.length; j++) {
+            hash = ((hash << 5) - hash) + Math.round(data[j] * 100);
+            hash = hash & hash;
+        }
+        components.push('a:' + hash);
+        audioCtx.close();
+    } catch(e) { components.push('a:error'); }
+
+    var ua = navigator.userAgent;
+    var uaParts = [];
+    if (ua.indexOf('iPhone') > -1) uaParts.push('iPhone');
+    if (ua.indexOf('iPad') > -1) uaParts.push('iPad');
+    if (ua.indexOf('Mac') > -1) uaParts.push('Mac');
+    if (ua.indexOf('Android') > -1) uaParts.push('Android');
+    if (ua.indexOf('Windows') > -1) uaParts.push('Windows');
+    var uaVersion = ua.match(/OS (\d+)_(\d+)/) || ua.match(/Android (\d+)/) || [];
+    if (uaVersion.length > 1) uaParts.push('v' + uaVersion[1]);
+    components.push('ua:' + uaParts.join('_'));
+
+    var combined = components.join('|||');
+    var hash1 = 0, hash2 = 0;
+    for (var k = 0; k < combined.length; k++) {
+        var charCode = combined.charCodeAt(k);
+        hash1 = ((hash1 << 5) - hash1) + charCode; hash1 = hash1 & hash1;
+        hash2 = ((hash2 << 7) - hash2) + (charCode * 31); hash2 = hash2 & hash2;
+    }
+    return 'FP-' + 
+             Math.abs(hash1).toString(16).toUpperCase().padStart(8, '0') +
+             Math.abs(hash2).toString(16).toUpperCase().padStart(8, '0');
+}
+
+// ============================================================
+// 设备ID管理
+// ============================================================
+
+function getDeviceId() {
+    if (DEVICE_ID) return DEVICE_ID;
+    var stored = getData('device_id');
+    if (stored && stored.length > 5) { DEVICE_ID = stored; return stored; }
+    return null;
+}
+
+function setDeviceId(id) {
+    if (!id) return false;
+    if (isDeviceLocked()) {
+        var current = getDeviceId();
+        if (current === id) return true;
+        return false;
+    }
+    if (saveData('device_id', id)) {
+        DEVICE_ID = id;
+        saveData('locked', 'true');
+        return true;
+    }
+    return false;
+}
+
+function isDeviceLocked() { return getData('locked') === 'true'; }
+
+function clearDeviceData() {
+    removeData('device_id'); removeData('auth_data'); removeData('locked'); DEVICE_ID = null;
+}
+
+function getToday() { return new Date().toISOString().split('T')[0]; }
+
+// ============================================================
+// 初始化设备
+// ============================================================
+
+function initDevice() {
+    return new Promise(function(resolve) {
+        var stored = getData('device_id');
+        if (stored && stored.length > 5 && isDeviceLocked()) {
+            DEVICE_ID = stored; updateUI(); resolve(stored); return;
+        }
+        if (stored && stored.length > 5) {
+            if (setDeviceId(stored)) { DEVICE_ID = stored; updateUI(); resolve(stored); return; }
+        }
+        var newId = generateStableFingerprint();
+        saveData('device_id', newId);
+        saveData('locked', 'true');
+        DEVICE_ID = newId;
+        updateUI();
+        resolve(newId);
     });
-</script>
-</body>
-</html>
+}
+
+// ============================================================
+// 🚀 iframe中转加载（绕过H5GG跨域限制）
+// ============================================================
+
+var bridgeCallback = null;
+var bridgeTimeout = null;
+
+// 全局监听 message
+window.addEventListener('message', function(event) {
+    if (!event.data || event.data.type !== 'CARDS_DATA') return;
+    
+    if (bridgeTimeout) {
+        clearTimeout(bridgeTimeout);
+        bridgeTimeout = null;
+    }
+    
+    if (bridgeCallback) {
+        var cb = bridgeCallback;
+        bridgeCallback = null;
+        
+        if (event.data.ok && event.data.keys) {
+            cb(event.data.keys);
+        } else {
+            cb(null);
+        }
+    }
+});
+
+function loadViaBridge() {
+    return new Promise(function(resolve) {
+        // 移除旧的 iframe
+        var oldFrame = document.getElementById('bridge-frame');
+        if (oldFrame) oldFrame.remove();
+        
+        // 创建隐藏 iframe
+        var iframe = document.createElement('iframe');
+        iframe.id = 'bridge-frame';
+        iframe.style.cssText = 'position:absolute;width:0;height:0;border:none;opacity:0;';
+        iframe.src = BRIDGE_URL + '?t=' + Date.now();
+        
+        bridgeCallback = resolve;
+        
+        // 超时保护
+        bridgeTimeout = setTimeout(function() {
+            if (bridgeCallback) {
+                var cb = bridgeCallback;
+                bridgeCallback = null;
+                cb(null);
+            }
+        }, 8000);
+        
+        document.body.appendChild(iframe);
+    });
+}
+
+function loadCardsFromRemote() {
+    return new Promise(function(resolve) {
+        setProgress(30);
+        
+        loadViaBridge().then(function(keys) {
+            if (keys) {
+                CARDS_DB = keys;
+                console.log('✅ 加载成功，共 ' + Object.keys(CARDS_DB).length + ' 个');
+                IS_LOADING = false;
+                setProgress(100);
+                updateUI();
+                resolve(true);
+            } else {
+                // 用旧缓存兜底
+                try {
+                    var cached = localStorage.getItem('gg_cards_cache');
+                    if (cached) {
+                        var data = JSON.parse(cached);
+                        if (data && data.keys) {
+                            CARDS_DB = data.keys;
+                            console.log('用旧缓存兜底');
+                        }
+                    }
+                } catch(e) {}
+                IS_LOADING = false;
+                setProgress(100);
+                updateUI();
+                resolve(false);
+            }
+        });
+    });
+}
+
+// 🚀 静默刷新
+function fetchCardsSilent() {
+    return new Promise(function(resolve) {
+        loadViaBridge().then(function(keys) {
+            if (keys) {
+                CARDS_DB = keys;
+                console.log('✅ 刷新成功，共 ' + Object.keys(CARDS_DB).length + ' 个');
+                try {
+                    localStorage.setItem('gg_cards_cache', JSON.stringify({
+                        keys: CARDS_DB, time: Date.now()
+                    }));
+                } catch(e) {}
+                IS_LOADING = false;
+                updateUI();
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        });
+    });
+}
+
+// ============================================================
+// 验证
+// ============================================================
+
+function remoteValidate(cardId, device) {
+    return new Promise(function(resolve) {
+        var card = CARDS_DB[cardId];
+        if (!card) { resolve({ valid: false, reason: '卡密无效或已被删除' }); return; }
+        if (card.expire !== '永久' && getToday() > card.expire) { resolve({ valid: false, reason: '卡密已过期' }); return; }
+        if (card.device && card.device !== device) { resolve({ valid: false, reason: '卡密已被其他设备绑定' }); return; }
+        resolve({ valid: true, type: card.type, expire: card.expire });
+    });
+}
+
+function checkLocalAuth() {
+    var cache = getData('auth_data');
+    if (!cache) return null;
+    if (!CARDS_DB || Object.keys(CARDS_DB).length === 0) return null;
+    
+    try {
+        var data = JSON.parse(cache);
+        var device = getDeviceId();
+        if (!device || data.device !== device) { removeData('auth_data'); return null; }
+        if (data.expire !== '永久' && getToday() > data.expire) { removeData('auth_data'); return null; }
+        var card = CARDS_DB[data.card];
+        if (!card) { removeData('auth_data'); return null; }
+        if (card.device && card.device !== device) { removeData('auth_data'); return null; }
+        if (card.expire !== '永久' && getToday() > card.expire) { removeData('auth_data'); return null; }
+        return data;
+    } catch(e) { return null; }
+}
+
+function saveAuth(cardId, type, expire, usedDevice) {
+    var deviceId = usedDevice || getDeviceId();
+    if (!deviceId) return false;
+    var data = { card: cardId, type: type, expire: expire, device: deviceId, time: new Date().toISOString() };
+    return saveData('auth_data', JSON.stringify(data));
+}
+
+function formatExpire(expire) {
+    if (!expire) return '未知';
+    if (expire === '永久') return '♾️ 永久';
+    try {
+        var parts = expire.split('-');
+        if (parts.length === 3) return parts[0] + '年' + parts[1] + '月' + parts[2] + '日';
+        return expire;
+    } catch(e) { return expire; }
+}
+
+function verifyCard(cardId, inputDevice) {
+    return new Promise(function(resolve) {
+        var device = inputDevice || getDeviceId();
+        if (!device) { resolve({ success: false, msg: '请等待设备识别完成' }); return; }
+        remoteValidate(cardId, device).then(function(result) {
+            if (result.valid) {
+                resolve({ success: true, msg: '验证通过', type: result.type, expire: result.expire, device: device });
+            } else {
+                resolve({ success: false, msg: result.reason });
+            }
+        });
+    });
+}
+
+// ============================================================
+// 复制
+// ============================================================
+
+function copyText(text, msg) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            showCopyToast(msg || '📋 已复制');
+        }).catch(function() { fallbackCopy(text, msg); });
+    } else { fallbackCopy(text, msg); }
+}
+
+function fallbackCopy(text, msg) {
+    var input = document.createElement('input');
+    input.value = text;
+    input.style.cssText = 'position:fixed;opacity:0;left:-9999px;';
+    document.body.appendChild(input);
+    input.select();
+    try { document.execCommand('copy'); showCopyToast(msg || '📋 已复制'); }
+    catch(e) { showCopyToast('❌ 复制失败'); }
+    document.body.removeChild(input);
+}
+
+function showCopyToast(msg) {
+    var toast = document.getElementById('copyToast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(function() { toast.classList.remove('show'); }, 3000);
+}
+
+// ============================================================
+// UI 更新
+// ============================================================
+
+function updateUI() {
+    var deviceId = getDeviceId();
+    var isBound = !!deviceId;
+    var isLocked = isDeviceLocked();
+
+    var udidValueEl = document.getElementById('udidValue');
+    var authDeviceEl = document.getElementById('authDeviceId');
+    var statusTip = document.getElementById('statusTip');
+
+    if (deviceId) {
+        udidValueEl.textContent = deviceId;
+        udidValueEl.style.color = '#bb86fc';
+        authDeviceEl.textContent = deviceId;
+        statusTip.textContent = '● 设备已识别';
+        statusTip.style.color = '#90EE90';
+    } else {
+        udidValueEl.textContent = '生成中...';
+        udidValueEl.style.color = '#888';
+        authDeviceEl.textContent = '---';
+        statusTip.textContent = '● 正在识别设备';
+        statusTip.style.color = '#f1c40f';
+    }
+
+    var boundStatus = document.getElementById('boundStatus');
+    var unbindArea = document.getElementById('unbindArea');
+    var udidDisplay = document.getElementById('udidDisplay');
+
+    if (isBound && is
