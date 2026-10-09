@@ -15,6 +15,12 @@ window.CARDS_DATA = {
       "type": "永久",
       "expire": "永久",
       "device": "FP-09AFC01B76E8BB5B"
+    },
+    "keys": {
+    "ABC000": {
+      "type": "永久",
+      "expire": "永久",
+      "device": "FP-6D8EFA813AC048FF"
     }
   }
 };
