@@ -20,6 +20,11 @@ window.CARDS_DATA = {
       "type": "永久",
       "expire": "永久",
       "device": "FP-6D8EFA813AC048FF"
+       },
+    "ABC001": {
+      "type": "永久",
+      "expire": "永久",
+      "device": "FP-427E438C6A7E2E0C"
     }
   }
 };
