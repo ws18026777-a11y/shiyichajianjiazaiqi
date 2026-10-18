@@ -31,6 +31,11 @@ window.CARDS_DATA = {
       "expire": "永久",
       "device": "FP-31D932774538FC97"
        },
+     "ABC004": {
+      "type": "永久",
+      "expire": "永久",
+      "device": "FP-658909053A138645"
+       },
     "ABC001": {
       "type": "永久",
       "expire": "永久",
