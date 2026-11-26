@@ -9,7 +9,7 @@ window.CARDS_DATA = {
     "ABC111": {
       "type": "一天",
       "expire": "一天",
-      "device": "FP-6D8EFA813AC048FF"
+      "device": ""
     },
     "ABC123": {
       "type": "永久",
@@ -24,7 +24,7 @@ window.CARDS_DATA = {
     "ABC000": {
       "type": "永久",
       "expire": "永久",
-      "device": "FP-6D8EFA813AC048FF"
+      "device": ""
        },
      "ABC003": {
       "type": "永久",
@@ -38,13 +38,13 @@ window.CARDS_DATA = {
        },
      "ABC909": {
       "type": "一天",
-      "expire": "一天",
+      "expire": "半年",
       "device": "FP-24927E520FE9B7AE"
     },
      "ABC001": {
       "type": "永久",
       "expire": "永久",
-      "device": "FP-427E438C6A7E2E0C"
+      "device": ""
     }
   }
 };
